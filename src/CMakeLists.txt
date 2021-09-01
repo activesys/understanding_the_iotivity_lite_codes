@@ -107,14 +107,14 @@ endif(WIN32)
 # Check IoTivity-lite
 if(WIN32)
     set(IOTIVITY_LITE_LIB_PATH                      ${IOTIVITY_PREFIX}/lib)
-    set(IOTIVITY_LITE_INCLUDE_PATH                  ${IOTIVITY_PREFIX}/include)
+    set(IOTIVITY_LITE_INCLUDE_PATH                  ${IOTIVITY_PREFIX}/include/)
     find_library(IOTIVITY_LITE_LIB IoTivity-lite    ${IOTIVITY_LITE_LIB_PATH})
     find_file(IOTIVITY_LITE_H oc_api.h              ${IOTIVITY_LITE_INCLUDE_PATH})
     set(IOTIVITY_LITE_INCLUDE                       ${IOTIVITY_LITE_INCLUDE_PATH})
 else(WIN32)
-    find_library(IOTIVITY_LITE_LIB IoTivity-lite)
-    find_file(IOTIVITY_LITE_H oc_api.h)
-    find_path(IOTIVITY_LITE_INCLUDE oc_api.h)
+    find_library(IOTIVITY_LITE_LIB iotivity-lite-client-server)
+    find_file(IOTIVITY_LITE_H oc_api.h              /usr/local/include/iotivity-lite)
+    find_path(IOTIVITY_LITE_INCLUDE oc_api.h        /usr/local/include/iotivity-lite)
 endif(WIN32)
 
 if(NOT IOTIVITY_LITE_LIB OR NOT IOTIVITY_LITE_H OR NOT IOTIVITY_LITE_INCLUDE)
@@ -143,6 +143,7 @@ else(WIN32)
 include_directories(
     init
     ${IOTIVITY_LITE_INCLUDE}
+    ${IOTIVITY_LITE_INCLUDE}/port/linux
 )
 endif(WIN32)
 
