@@ -1,5 +1,6 @@
 #include <oc_api.h>
 #include <oc_core_res.h>
+#include <oc_rep.h>
 #include <signal.h>
 #ifdef WIN32
 #include <windows.h>
@@ -22,35 +23,16 @@ static bool state = false;
 int power;
 oc_string_t name;
 
-static void
-set_additional_platform_properties(void *data)
-{
-    (void)data;
-    // Manufactures Details Link
-    oc_set_custom_platform_property(mnml, "http://www.example.com/manufacture");
-    // Model Number
-    oc_set_custom_platform_property(mnmo, "Model No1");
-    // Date of Manufacture
-    oc_set_custom_platform_property(mndt, "2020/01/17");
-    //Serial Number
-    oc_set_custom_platform_property(mnsel, "1234567890");
-}
-
-static void
-set_device_custom_property(void *data)
-{
-    (void)data;
-    oc_set_custom_device_property(purpose, "desk lamp");
-}
-
 static int
 app_init(void)
 {
-    int ret = oc_init_platform("Intel", set_additional_platform_properties, NULL);
-    ret |= oc_add_device("/oic/d", "oic.d.light", "Lamp", "ocf.1.0.0",
-        "ocf.res.1.0.0", set_device_custom_property, NULL);
+    int ret = oc_init_platform("Intel", NULL, NULL);
+    ret |= oc_add_device("/oic/d", "oic.d.light.0", "Lamp 0", "ocf.1.0.0",
+        "ocf.res.1.0.0", NULL, NULL);
+    ret |= oc_add_device("/oic/d", "oic.d.light.1", "Lamp 1", "ocf.1.0.0",
+        "ocf.res.1.0.0", NULL, NULL);
     oc_new_string(&name, "John's Light", 12);
-    oc_device_bind_resource_type(0, "oic.d.binaryswitch");
+
     return ret;
 }
 
@@ -124,9 +106,9 @@ put_light(oc_request_t *request, oc_interface_mask_t iface_mask,
 static void
 register_resources(void)
 {
-    oc_resource_t *res = oc_new_resource(NULL, "/a/light", 2, 0);
-    oc_resource_bind_resource_type(res, "core.light");
-    oc_resource_bind_resource_type(res, "core.brightlight");
+    oc_resource_t *res = oc_new_resource(NULL, "/a/light/0", 2, 0);
+    oc_resource_bind_resource_type(res, "core.light.0");
+    oc_resource_bind_resource_type(res, "core.brightlight.0");
     oc_resource_bind_resource_interface(res, OC_IF_RW);
     oc_resource_set_default_interface(res, OC_IF_RW);
     oc_resource_set_discoverable(res, true);
@@ -135,6 +117,31 @@ register_resources(void)
     oc_resource_set_request_handler(res, OC_PUT, put_light, NULL);
     oc_resource_set_request_handler(res, OC_POST, post_light, NULL);
     oc_add_resource(res);
+
+    oc_resource_t* res1 = oc_new_resource(NULL, "/a/light/1", 2, 1);
+    oc_resource_bind_resource_type(res1, "core.light.1");
+    oc_resource_bind_resource_type(res1, "core.brightlight.1");
+    oc_resource_bind_resource_interface(res1, OC_IF_RW);
+    oc_resource_set_default_interface(res1, OC_IF_RW);
+    oc_resource_set_discoverable(res1, true);
+    oc_resource_set_periodic_observable(res1, 1);
+    oc_resource_set_request_handler(res1, OC_GET, get_light, NULL);
+    oc_resource_set_request_handler(res1, OC_PUT, put_light, NULL);
+    oc_resource_set_request_handler(res1, OC_POST, post_light, NULL);
+    oc_add_resource(res1);
+}
+
+void con_notification(size_t device_index, oc_rep_t *rep)
+{
+    PRINT("oic.wk.con resources has changed on device: %zd\n", device_index);
+
+    char * json;
+    size_t json_size;
+    json_size = oc_rep_to_json(rep, NULL, 0, true);
+    json = (char *)malloc(json_size + 1);
+    oc_rep_to_json(rep, json, json_size + 1, true);
+    printf("%s", json);
+    free(json);
 }
 
 static void
@@ -179,9 +186,13 @@ main(void)
 
     oc_clock_time_t next_event;
 
+    oc_set_con_res_announced(true);
+
     init = oc_main_init(&handler);
     if (init < 0)
         return init;
+
+    oc_set_con_write_cb(con_notification);
 
     while (quit != 1) {
 #ifdef WIN32
