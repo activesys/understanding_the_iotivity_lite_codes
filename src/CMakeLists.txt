@@ -196,3 +196,36 @@ else(WIN32)
 target_link_libraries(oic_wk_con_server ${IOTIVITY_LITE_LIB})
 target_link_libraries(oic_wk_con_client ${IOTIVITY_LITE_LIB})
 endif(WIN32)
+
+##################################
+# idd
+if(WIN32)
+include_directories(
+    idd
+    ${IOTIVITY_LITE_INCLUDE}
+    ${IOTIVITY_LITE_INCLUDE}/port/windows
+)
+else(WIN32)
+include_directories(
+    idd
+    ${IOTIVITY_LITE_INCLUDE}
+    ${IOTIVITY_LITE_INCLUDE}/port/linux
+)
+endif(WIN32)
+
+set(IDD_SERVER_SOURCES
+    idd/idd_server.c
+)
+set(IDD_CLIENT_SOURCES
+    idd/idd_client.c
+)
+add_definitions(-DOC_DYNAMIC_ALLOCATION -DOC_SERVER -DOC_CLIENT)
+add_executable(idd_server ${IDD_SERVER_SOURCES})
+add_executable(idd_client ${IDD_CLIENT_SOURCES})
+if(WIN32)
+target_link_libraries(idd_server ${IOTIVITY_LITE_LIB} ws2_32 Iphlpapi)
+target_link_libraries(idd_client ${IOTIVITY_LITE_LIB} ws2_32 Iphlpapi)
+else(WIN32)
+target_link_libraries(idd_server ${IOTIVITY_LITE_LIB})
+target_link_libraries(idd_client ${IOTIVITY_LITE_LIB})
+endif(WIN32)

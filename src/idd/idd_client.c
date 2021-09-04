@@ -36,31 +36,25 @@ static bool state;
 static int power;
 static oc_string_t name;
 
-static bool changed = false;
-
 static void
-get_d(oc_client_response_t *data);
-
-static void
-post_con(oc_client_response_t *data)
+get_idd(oc_client_response_t *data)
 {
-    PRINT("POST_con:\n");
-    if (data->code == OC_STATUS_CHANGED)
-        PRINT("POST response: CHANGED\n");
-    else if (data->code == OC_STATUS_CREATED)
-        PRINT("POST response: CREATED\n");
-    else
-        PRINT("POST response code %d\n", data->code);
+    PRINT("GET_idd:\n");
+    oc_rep_t *rep = data->payload;
 
-    changed = true;
-    oc_do_get("/oic/d", light_server, "if=oic.if.baseline", &get_d, LOW_QOS, NULL);
+    char * json;
+    size_t json_size;
+    json_size = oc_rep_to_json(rep, NULL, 0, true);
+    json = (char *)malloc(json_size + 1);
+    oc_rep_to_json(rep, json, json_size + 1, true);
+    printf("%s", json);
+    free(json);
 }
 
-
 static void
-get_d(oc_client_response_t *data)
+get_introspection(oc_client_response_t *data)
 {
-    PRINT("GET_device:\n");
+    PRINT("GET_introspection:\n");
     oc_rep_t *rep = data->payload;
 
     char * json;
@@ -71,18 +65,7 @@ get_d(oc_client_response_t *data)
     printf("%s", json);
     free(json);
 
-    if (!changed) {
-        if (oc_init_post("/oc/con", light_server, NULL, &post_con, LOW_QOS, NULL)) {
-            oc_rep_start_root_object();
-            oc_rep_set_text_string(root, n, "New lamp name");
-            oc_rep_end_root_object();
-            if (oc_do_post())
-                PRINT("Sent POST request\n");
-            else
-                PRINT("Could not send POST request\n");
-        } else
-            PRINT("Could not init POST request\n");
-    }
+    oc_do_get("/oc/introspection", light_server, "if=oic.if.baseline", &get_idd, LOW_QOS, NULL);
 }
 
 static oc_discovery_flags_t
@@ -102,7 +85,7 @@ discovery(const char *anchor, const char *uri, oc_string_array_t types,
     for (i = 0; i < (int)oc_string_array_get_allocated_size(types); i++) {
         char *t = oc_string_array_get_item(types, i);
         PRINT("\n\nDISCOVERED RES %s\n\n\n", t);
-        if (strlen(t) == 12 && strncmp(t, "core.light.1", 12) == 0) {
+        if (strlen(t) == 10 && strncmp(t, "core.light", 10) == 0) {
             oc_endpoint_list_copy(&light_server, endpoint);
             strncpy(a_light, uri, uri_len);
             a_light[uri_len] = '\0';
@@ -115,7 +98,7 @@ discovery(const char *anchor, const char *uri, oc_string_array_t types,
                 ep = ep->next;
             }
 
-            oc_do_get("/oic/d", light_server, "if=oic.if.baseline", &get_d, LOW_QOS, NULL);
+            oc_do_get("/oc/wk/introspection", light_server, "if=oic.if.baseline", &get_introspection, LOW_QOS, NULL);
 
             return OC_STOP_DISCOVERY;
         }
@@ -126,7 +109,7 @@ discovery(const char *anchor, const char *uri, oc_string_array_t types,
 static void
 issue_requests(void)
 {
-    oc_do_ip_discovery("core.light.1", &discovery, NULL);
+    oc_do_ip_discovery("core.light", &discovery, NULL);
 }
 
 static void
@@ -170,10 +153,6 @@ main(void)
                                           .requests_entry = issue_requests };
 
     oc_clock_time_t next_event;
-
-#ifdef OC_STORAGE
-    oc_storage_config("./simpleclient_creds/");
-#endif /* OC_STORAGE */
 
     init = oc_main_init(&handler);
     if (init < 0)
