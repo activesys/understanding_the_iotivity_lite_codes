@@ -219,13 +219,19 @@ set(IDD_SERVER_SOURCES
 set(IDD_CLIENT_SOURCES
     idd/idd_client.c
 )
+set(DEVICE_BUILDER_SERVER_SOURCES
+    idd/device_builder_server.c
+)
 add_definitions(-DOC_DYNAMIC_ALLOCATION -DOC_SERVER -DOC_CLIENT)
 add_executable(idd_server ${IDD_SERVER_SOURCES})
 add_executable(idd_client ${IDD_CLIENT_SOURCES})
+add_executable(device_builder_server ${DEVICE_BUILDER_SERVER_SOURCES})
 if(WIN32)
 target_link_libraries(idd_server ${IOTIVITY_LITE_LIB} ws2_32 Iphlpapi)
 target_link_libraries(idd_client ${IOTIVITY_LITE_LIB} ws2_32 Iphlpapi)
+target_link_libraries(device_builder_server ${IOTIVITY_LITE_LIB} ws2_32 Iphlpapi)
 else(WIN32)
 target_link_libraries(idd_server ${IOTIVITY_LITE_LIB})
 target_link_libraries(idd_client ${IOTIVITY_LITE_LIB})
+target_link_libraries(device_builder_server ${IOTIVITY_LITE_LIB})
 endif(WIN32)

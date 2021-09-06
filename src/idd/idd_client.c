@@ -85,7 +85,7 @@ discovery(const char *anchor, const char *uri, oc_string_array_t types,
     for (i = 0; i < (int)oc_string_array_get_allocated_size(types); i++) {
         char *t = oc_string_array_get_item(types, i);
         PRINT("\n\nDISCOVERED RES %s\n\n\n", t);
-        if (strlen(t) == 10 && strncmp(t, "core.light", 10) == 0) {
+        if (strlen(t) == 19 && strncmp(t, "oic.r.switch.binary", 19) == 0) {
             oc_endpoint_list_copy(&light_server, endpoint);
             strncpy(a_light, uri, uri_len);
             a_light[uri_len] = '\0';
@@ -109,7 +109,7 @@ discovery(const char *anchor, const char *uri, oc_string_array_t types,
 static void
 issue_requests(void)
 {
-    oc_do_ip_discovery("core.light", &discovery, NULL);
+    oc_do_ip_discovery("oic.r.switch.binary", &discovery, NULL);
 }
 
 static void
