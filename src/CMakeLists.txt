@@ -235,3 +235,36 @@ target_link_libraries(idd_server ${IOTIVITY_LITE_LIB})
 target_link_libraries(idd_client ${IOTIVITY_LITE_LIB})
 target_link_libraries(device_builder_server ${IOTIVITY_LITE_LIB})
 endif(WIN32)
+
+##################################
+# collection
+if(WIN32)
+include_directories(
+    collection
+    ${IOTIVITY_LITE_INCLUDE}
+    ${IOTIVITY_LITE_INCLUDE}/port/windows
+)
+else(WIN32)
+include_directories(
+    collection
+    ${IOTIVITY_LITE_INCLUDE}
+    ${IOTIVITY_LITE_INCLUDE}/port/linux
+)
+endif(WIN32)
+
+set(COLLECTION_SERVER_SOURCES
+    collection/collection_server.c
+)
+set(COLLECTION_CLIENT_SOURCES
+    collection/collection_client.c
+)
+add_definitions(-DOC_DYNAMIC_ALLOCATION -DOC_SERVER -DOC_CLIENT -DOC_COLLECTIONS -DOC_COLLECTIONS_IF_CREATE)
+add_executable(collection_server ${COLLECTION_SERVER_SOURCES})
+add_executable(collection_client ${COLLECTION_CLIENT_SOURCES})
+if(WIN32)
+target_link_libraries(collection_server ${IOTIVITY_LITE_LIB} ws2_32 Iphlpapi)
+target_link_libraries(collection_client ${IOTIVITY_LITE_LIB} ws2_32 Iphlpapi)
+else(WIN32)
+target_link_libraries(collection_server ${IOTIVITY_LITE_LIB})
+target_link_libraries(collection_client ${IOTIVITY_LITE_LIB})
+endif(WIN32)
